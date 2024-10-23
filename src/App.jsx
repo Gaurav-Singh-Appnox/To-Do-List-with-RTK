@@ -1,72 +1,64 @@
-import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setToDo } from "./store/toDoSlice";
+import {
+  addToDo,
+  setToDo,
+  removeToDo,
+  editToDo,
+  markDone,
+} from "./store/toDoSlice";
 
 function App() {
+  const dispatch = useDispatch();
   const toDoList = useSelector((state) => state.toDoSlice.toDoList);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editId, setEditId] = useState(null);
-  const Dispatch = useDispatch()
+  const toDo = useSelector((state) => state.toDoSlice.toDo);
+  const isEditing = useSelector((state) => state.toDoSlice.isEditing);
+  const editId = useSelector((state) => state.toDoSlice.editId);
 
   const handleInputChange = (e) => {
-        Dispatch(setToDo(e.taget.value));
+    dispatch(setToDo(e.target.value));
   };
 
   const handleAddToDO = (e) => {
     e.preventDefault();
-    if (toDo.text.trim() === "") return;
-
     if (isEditing) {
-      setToDoList((prevList) =>
-        prevList.map((item) =>
-          item.id === editId ? { ...item, text: toDo.text } : item
-        )
-      );
-
-      setEditId(null);
-      setIsEditing(false);
+      console.log("isEditing", isEditing);
+      dispatch(addToDo());
     } else {
-      setToDoList((prevList) => [...prevList, { ...toDo, id: toDo.id }]);
-      localStorage.setItem("toDoList", toDoList);
-      setToDo((prev) => ({ id: prev.id + 1, text: "" })); // Reset the input
+      dispatch(addToDo());
     }
   };
 
   const handleDelete = (id) => {
-    setToDoList((prevList) => prevList.filter((item) => item.id !== id));
+    dispatch(removeToDo(id));
   };
 
   const handleEdit = (id) => {
-    console.log("edit clicked", id);
-    let editToDo = toDoList.find((item) => item.id === id);
-    setToDo({ ...editToDo });
-    setIsEditing(true);
-    setEditId(id);
+    const itemToEdit = toDoList.find((item) => item.id === id);
+    dispatch(setToDo(itemToEdit.text));
+    dispatch(editToDo(id));
   };
 
   const handleDone = (id) => {
-    setToDoList((prevList) =>
-      prevList.map((item) => (item.id === id ? { ...item, done: true } : item))
-    );
+    dispatch(markDone(id));
   };
 
   return (
     <div className="w-[80vw] max-w-[1200px] mx-auto">
       <h1 className="text-4xl font-bold text-center">To-Do List</h1>
       <div className="mt-12">
-        <form action="#" className="flex justify-between">
+        <form onSubmit={handleAddToDO} className="flex justify-between">
           <input
             onChange={handleInputChange}
             type="text"
             placeholder="Add new To-Do"
-            value={toDo.text} // Controlled input
+            value={toDo.text}
             className="outline flex-1 px-4"
           />
           <button
-            onClick={handleAddToDO}
+            type="submit"
             className="ml-12 border-2 border-black px-4 py-1"
           >
-            Add
+            {isEditing ? "Update" : "Add"}
           </button>
         </form>
         <div className="flex flex-col gap-4 mt-12 w-full min-h-96 bg-slate-300 p-4">
@@ -75,7 +67,7 @@ function App() {
               <div key={item.id} className="flex justify-between gap-4">
                 <p
                   className={`text-lg font-bold bg-white px-2 flex-1 ${
-                    item.done === true ? `line-through` : ""
+                    item.done ? "line-through" : ""
                   }`}
                 >
                   {item.text}
@@ -98,7 +90,6 @@ function App() {
                 >
                   Delete
                 </button>
-                {/* <input type="checkbox" className="p-4" checked > </input> */}
               </div>
             ))}
         </div>
